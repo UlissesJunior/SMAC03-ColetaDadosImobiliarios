@@ -16,5 +16,5 @@ coletados por cada um. A base dos Agentes Coletores corresponde a edificação c
 local de onde eles partem para iniciar a coleta e retornam ao final do expediente para upload dos dados coletados.
 
 <a href="https://geo.eloimendes.mg.gov.br/">
-    <img src="assets/eloimendes.jpg" alt="Cidade Eloi Mendes">
+    <img src="assets/Cen%C3%A1rio%202%20-%20Edifica%C3%A7%C3%B5es.jpg" alt="Cidade Eloi Mendes">
 </a>
