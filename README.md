@@ -25,7 +25,7 @@ local de onde eles partem para iniciar a coleta e retornam ao final do expedient
 
 Os scripts estão na pasta `codigo_fonte` e devem ser executados na ordem.
 
-### 2.1. `setup_grafo/extrair_vertices_osm.py`
+### 2.1. `setup_grafo/extrair_vertices_pbf.py`
 
 Este é o primeiro script do pipeline. Ele é responsável por ler o arquivo `.osm.pbf` bruto e extrair os **vértices (nós)** do grafo.
 
