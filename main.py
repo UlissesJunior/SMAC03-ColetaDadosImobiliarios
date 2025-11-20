@@ -15,6 +15,11 @@ from fleury_optimizer import FleuryRouteOptimizer
 # Valor numérico = limitar área ao redor do ponto inicial
 REDUCTION_RADIUS_M = 800
 
+# Base dos Agentes Coletores (ponto de partida e retorno)
+# Esta coordenada fica no CANTO DIREITO da área (conforme imagem)
+BASE_AGENTS_LAT = -21.6097503
+BASE_AGENTS_LON = -45.5672034
+
 # Coordenadas da área de Eloi Mendes (formato: latitude, longitude)
 ELOIMENDES_UPLEFT = (-21.608187, -45.571433)    # Ponta esquerda cima (noroeste)
 ELOIMENDES_UPRIGHT = (-21.607853, -45.563601)   # Ponta direita cima (nordeste)
@@ -28,7 +33,7 @@ def main():
     # ============= CONFIGURAÇÃO =============
     
     # Escolha o modo de operação
-    USE_COORDINATES = False  # True = usar coordenadas | False = usar nome de cidade
+    USE_COORDINATES = True  # True = usar coordenadas | False = usar nome de cidade
     
     # Número de agentes para otimização
     NUM_AGENTS = 3
