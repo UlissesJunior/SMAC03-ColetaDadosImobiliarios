@@ -407,6 +407,124 @@ class FleuryRouteOptimizer:
         
         return trail
     
+    def optimize_routes_full_coverage(self, graph, start_node, num_agents):
+        """
+        Otimiza rotas garantindo cobertura COMPLETA de todas as arestas.
+        Divide o circuito euleriano total entre múltiplos agentes.
+        
+        Args:
+            graph: Grafo da rede viária
+            start_node: Nó inicial para todos os agentes
+            num_agents: Número de agentes
+            
+        Returns:
+            Lista de trilhas (uma por agente)
+        """
+        print(f"\nOtimizando rotas com COBERTURA TOTAL para {num_agents} agentes...")
+        
+        # NÃO reduz o grafo - queremos cobrir TUDO
+        print(f"Processando grafo completo com {len(graph.nodes())} nós e {len(graph.edges())} arestas")
+        
+        # Constrói grafo simples
+        simple_graph = self._build_simple_graph(graph)
+        
+        # Remove nós isolados
+        nodes_with_edges = [n for n in simple_graph.nodes() if simple_graph.degree(n) > 0]
+        if nodes_with_edges:
+            simple_graph = simple_graph.subgraph(nodes_with_edges).copy()
+        
+        # Garante que o grafo seja conexo (pega maior componente)
+        if not nx.is_connected(simple_graph):
+            print("AVISO: Grafo não conexo. Usando maior componente conexa.")
+            largest_cc = max(nx.connected_components(simple_graph), key=len)
+            simple_graph = simple_graph.subgraph(largest_cc).copy()
+            
+            # Atualiza start_node se necessário
+            if start_node not in simple_graph.nodes():
+                start_node = list(simple_graph.nodes())[0]
+                print(f"Nó inicial ajustado para: {start_node}")
+        
+        print(f"Grafo conexo: {len(simple_graph.nodes())} nós, {len(simple_graph.edges())} arestas")
+        
+        # Torna o grafo euleriano (adiciona arestas para vértices ímpares)
+        print("Tornando grafo euleriano...")
+        eulerian_graph = self._make_eulerian_via_matching(simple_graph)
+        
+        print(f"Grafo euleriano criado: {len(eulerian_graph.edges())} arestas")
+        
+        # Gera circuito euleriano completo
+        print("Gerando circuito euleriano completo...")
+        complete_trail = self._get_eulerian_trail(eulerian_graph, start_node=start_node)
+        
+        total_trail_length = len(complete_trail) - 1
+        print(f"Circuito completo gerado: {total_trail_length} arestas")
+        
+        # Divide o circuito entre os agentes de forma balanceada
+        print(f"Dividindo circuito entre {num_agents} agentes...")
+        agents_trails = self._split_trail_among_agents(complete_trail, num_agents, start_node)
+        
+        # Exibe estatísticas de cada agente
+        for i, trail in enumerate(agents_trails):
+            trail_edges = len(trail) - 1
+            print(f"  Agente {i+1}: {trail_edges} arestas ({trail_edges/total_trail_length*100:.1f}%)")
+        
+        self.processed_graph = simple_graph
+        return agents_trails
+    
+    def _split_trail_among_agents(self, complete_trail, num_agents, start_node):
+        """
+        Divide um circuito euleriano completo entre múltiplos agentes.
+        
+        Args:
+            complete_trail: Trilha euleriana completa
+            num_agents: Número de agentes
+            start_node: Nó inicial (base dos agentes)
+            
+        Returns:
+            Lista de trilhas para cada agente
+        """
+        if num_agents == 1:
+            return [complete_trail]
+        
+        # Calcula quantas arestas cada agente deve percorrer
+        total_edges = len(complete_trail) - 1
+        edges_per_agent = total_edges // num_agents
+        
+        agents_trails = []
+        
+        # Reorganiza a trilha para começar do start_node
+        if complete_trail[0] != start_node:
+            try:
+                start_idx = complete_trail.index(start_node)
+                complete_trail = complete_trail[start_idx:] + complete_trail[1:start_idx+1]
+            except ValueError:
+                pass  # start_node não está na trilha
+        
+        # Divide a trilha
+        current_idx = 0
+        for agent_idx in range(num_agents):
+            if agent_idx == num_agents - 1:
+                # Último agente pega todo o resto
+                agent_trail = complete_trail[current_idx:]
+            else:
+                # Cada agente pega sua parte
+                end_idx = current_idx + edges_per_agent + 1
+                agent_trail = complete_trail[current_idx:end_idx]
+                current_idx = end_idx - 1  # Overlap de 1 nó
+            
+            # Garante que cada trilha comece e termine no start_node
+            if len(agent_trail) > 0:
+                if agent_trail[0] != start_node:
+                    agent_trail = [start_node] + agent_trail
+                if agent_trail[-1] != start_node:
+                    agent_trail.append(start_node)
+            else:
+                agent_trail = [start_node]
+            
+            agents_trails.append(agent_trail)
+        
+        return agents_trails
+    
     def optimize_routes(self, graph, start_node, num_agents):
         """
         Otimiza rotas para múltiplos agentes usando algoritmo de Fleury.
@@ -480,6 +598,14 @@ class FleuryRouteOptimizer:
             for node in graph.nodes()
         }
         
+        # Identifica arestas cobertas pelos agentes
+        covered_edges = set()
+        for trail in agents_trails:
+            for i in range(len(trail) - 1):
+                u, v = trail[i], trail[i+1]
+                edge = tuple(sorted([u, v]))
+                covered_edges.add(edge)
+        
         # Identifica nós visitados
         visited_nodes = set()
         for trail in agents_trails:
@@ -487,22 +613,36 @@ class FleuryRouteOptimizer:
                 if node in node_positions:
                     visited_nodes.add(node)
         
-        # Calcula limites do mapa
-        x_coords = [node_positions[node][0] for node in visited_nodes]
-        y_coords = [node_positions[node][1] for node in visited_nodes]
-        min_x, max_x = min(x_coords), max(x_coords)
-        min_y, max_y = min(y_coords), max(y_coords)
+        # Calcula limites do mapa usando TODOS os nós do grafo
+        all_x = [node_positions[node][0] for node in graph.nodes()]
+        all_y = [node_positions[node][1] for node in graph.nodes()]
+        min_x, max_x = min(all_x), max(all_x)
+        min_y, max_y = min(all_y), max(all_y)
         
         # Cria figura
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.set_facecolor("white")
         
-        # Desenha grafo base (cinza claro)
+        # Desenha grafo base
+        # Arestas NÃO cobertas em VERMELHO (para identificar problemas)
+        # Arestas cobertas em cinza claro
+        uncovered_count = 0
         for u, v, data in graph.edges(data=True):
             if u in node_positions and v in node_positions:
                 x1, y1 = node_positions[u]
                 x2, y2 = node_positions[v]
-                ax.plot((x1, x2), (y1, y2), color="lightgray", linewidth=0.4, alpha=0.8)
+                edge = tuple(sorted([u, v]))
+                
+                if edge in covered_edges:
+                    # Aresta coberta - cinza claro
+                    ax.plot((x1, x2), (y1, y2), color="lightgray", linewidth=0.4, alpha=0.5)
+                else:
+                    # Aresta NÃO coberta - vermelho (alerta!)
+                    ax.plot((x1, x2), (y1, y2), color="red", linewidth=0.8, alpha=0.7)
+                    uncovered_count += 1
+        
+        if uncovered_count > 0:
+            print(f"AVISO: {uncovered_count} arestas NÃO COBERTAS (mostradas em vermelho)")
         
         # Prepara cores para agentes
         cmap = matplotlib.colormaps.get_cmap("tab10")

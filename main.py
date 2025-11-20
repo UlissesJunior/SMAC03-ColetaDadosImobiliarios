@@ -10,7 +10,9 @@ from fleury_optimizer import FleuryRouteOptimizer
 
 # ============= CONSTANTES =============
 
-# Raio de redução para processamento (em metros)
+# Raio de redução para processamento (em metros) - usado APENAS no modo "ByPlace"
+# None = processar grafo completo
+# Valor numérico = limitar área ao redor do ponto inicial
 REDUCTION_RADIUS_M = 800
 
 # Coordenadas da área de Eloi Mendes (formato: latitude, longitude)
@@ -26,7 +28,7 @@ def main():
     # ============= CONFIGURAÇÃO =============
     
     # Escolha o modo de operação
-    USE_COORDINATES = True  # True = usar coordenadas | False = usar nome de cidade
+    USE_COORDINATES = False  # True = usar coordenadas | False = usar nome de cidade
     
     # Número de agentes para otimização
     NUM_AGENTS = 3
@@ -103,11 +105,21 @@ def main():
     print("\n" + "-" * 70)
     optimization_start = time.time()
     
-    agents_trails = optimizer.optimize_routes(
-        graph, 
-        start_node, 
-        NUM_AGENTS
-    )
+    # Escolhe método de otimização baseado no modo
+    if USE_COORDINATES:
+        # Modo coordenadas: usa cobertura total (todas as ruas)
+        agents_trails = optimizer.optimize_routes_full_coverage(
+            graph, 
+            start_node, 
+            NUM_AGENTS
+        )
+    else:
+        # Modo cidade: usa método com particionamento e redução de raio
+        agents_trails = optimizer.optimize_routes(
+            graph, 
+            start_node, 
+            NUM_AGENTS
+        )
     
     optimization_time = time.time() - optimization_start
     
@@ -116,8 +128,25 @@ def main():
     print(f"  • Tempo de otimização: {optimization_time:.2f}s")
     
     # Calcula estatísticas
-    total_edges = sum(len(trail) - 1 for trail in agents_trails)
-    print(f"  • Total de arestas percorridas: {total_edges}")
+    total_edges_walked = sum(len(trail) - 1 for trail in agents_trails)
+    
+    # Conta arestas únicas cobertas
+    covered_edges = set()
+    for trail in agents_trails:
+        for i in range(len(trail) - 1):
+            u, v = trail[i], trail[i+1]
+            edge = tuple(sorted([u, v]))  # Normaliza a aresta
+            covered_edges.add(edge)
+    
+    total_graph_edges = len(graph.edges())
+    coverage_percent = (len(covered_edges) / total_graph_edges * 100) if total_graph_edges > 0 else 0
+    
+    print(f"  • Total de arestas percorridas: {total_edges_walked}")
+    print(f"  • Arestas únicas cobertas: {len(covered_edges)} de {total_graph_edges} ({coverage_percent:.1f}%)")
+    
+    # Aviso de cobertura incompleta apenas no modo coordenadas (onde é esperado 100%)
+    if USE_COORDINATES and coverage_percent < 100:
+        print(f"  ATENÇÃO: {total_graph_edges - len(covered_edges)} arestas NÃO foram cobertas!")
     
     # ============= VISUALIZAÇÃO =============
     
