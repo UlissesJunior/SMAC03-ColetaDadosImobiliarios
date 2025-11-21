@@ -14,20 +14,27 @@
 # Saída:   resultados_finais/animacao_cpp.mp4
 # ----------------------------------------------------------------------
 
+import os
+os.environ["MPLBACKEND"] = "Agg"   # força backend via env
+import matplotlib
+matplotlib.use("Agg")              # garante FigureCanvasAgg
+
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString
 import contextily as ctx
 import numpy as np
-import os 
 from moviepy import VideoClip
 
 def mplfig_to_npimage(fig):
     fig.canvas.draw()
-    buf = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
     w, h = fig.canvas.get_width_height()
-    return buf.reshape((h, w, 3))
+    argb = np.frombuffer(fig.canvas.tostring_argb(), dtype=np.uint8)
+    argb = argb.reshape((h, w, 4))
+    rgba = argb[:, :, [1, 2, 3, 0]]
+    rgb = rgba[:, :, :3]
+    return rgb
 
 # =============================
 # 0. Definição de Caminhos
@@ -81,7 +88,7 @@ gdf_seg_web = gdf_seg.to_crs(epsg=3857)
 
 xmin, ymin, xmax, ymax = gdf_seg_web.total_bounds
 N = len(gdf_seg_web)
-DUR = N / FPS 
+DUR = N / FPS
 
 print(f"   → Total de frames: {N}")
 print(f"   → Duração do vídeo: {DUR:.2f}s")
@@ -92,7 +99,7 @@ print(f"   → Duração do vídeo: {DUR:.2f}s")
 print("3. Configurando a figura base...")
 fig, ax = plt.subplots(figsize=(10, 12))
 
-ctx.add_basemap(ax, crs="EPSG:3857", source=ctx.providers.CartoDB.DarkMatter)
+ctx.add_basemap(ax, crs="EPSG:3857", source=ctx.providers.CartoDB.DarkMatter, zoom=15)
 ax.set_xlim(xmin, xmax)
 ax.set_ylim(ymin, ymax)
 ax.axis("off") # Remove eixos
@@ -113,7 +120,7 @@ def make_frame(t):
         i = N - 1
 
     current_segments = gdf_seg_web.iloc[:i+1]
-    
+
     xs = []
     ys = []
     for geom in current_segments.geometry:
@@ -137,6 +144,6 @@ os.makedirs(os.path.dirname(PATH_SAIDA), exist_ok=True)
 
 clip = VideoClip(make_frame, duration=DUR)
 clip.write_videofile(PATH_SAIDA, fps=FPS, codec="libx264")
-plt.close(fig) 
+plt.close(fig)
 
 print(f"✅ Vídeo salvo com sucesso: {PATH_SAIDA}")

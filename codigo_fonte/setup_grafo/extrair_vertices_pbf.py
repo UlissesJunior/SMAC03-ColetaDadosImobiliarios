@@ -13,10 +13,10 @@
 # Saída:   dados_processados/vertices_cruzamentos.csv
 
 # ATENÇÃO!!! Essa é uma ferramenta de pré-processamento para gerar um candidato a lista de vértices!!!
-# Depois, foi realizado um tratamento (manual) para filtrar/limpar esses vértices  
+# Depois, foi realizado um tratamento (manual) para filtrar/limpar esses vértices
 # de forma que a modelagem fique mais próxima da ortofoto do trabalho
 # Sugestões e adaptações do script para filtrar os vértices e gerar um arquivo mais limpo são bem vindas!!!
-# O ideal seria que essa etapa já fornecesse a lista de adjacencias e os vertices prontos! 
+# O ideal seria que essa etapa já fornecesse a lista de adjacencias e os vertices prontos!
 # ----------------------------------------------------------------------
 
 
@@ -27,7 +27,7 @@ from shapely.geometry import Point
 from shapely.ops import linemerge
 import pandas as pd
 
-PBF_PATH = r"dados_brutos\map.pbf"
+PBF_PATH = r"dados_brutos/map.pbf"
 OUT_DIR = r"dados_processados"
 NETWORK_TYPE = "driving"
 NODE_CLUSTER_TOL_M = 3.0

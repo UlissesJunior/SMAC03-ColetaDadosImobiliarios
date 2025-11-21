@@ -7,7 +7,7 @@
 #
 # Ele lê a lista de adjacência e o CSV de vértices, ambos resultados
 # de um tratamento manual (TRABAIERA ZzzZZZzz !!!), e para cada aresta (u, v) definida,
-# calcula a distância geodésica (Haversine) entre os dois pontos. 
+# calcula a distância geodésica (Haversine) entre os dois pontos.
 #
 # Entrada: dados_processados/vertices_reordenados.csv (Tratado manualmente)
 # Entrada: dados_processados/adjacency.txt (Tratado manualmente)
@@ -21,8 +21,8 @@ import math
 import sys
 
 
-ADJ_PATH = r"dados_processados\adjacency.txt"
-VERT_PATH = r"dados_processados\vertices_reordenados.csv"
+ADJ_PATH = r"dados_processados/adjacency.txt"
+VERT_PATH = r"dados_processados/vertices_reordenados.csv"
 OUT_DIR   = r"dados_processados"
 
 # Arquivo final
