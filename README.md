@@ -120,5 +120,41 @@ Este script gera uma animação dinâmica (arquivo MP4) que "desenha" a rota do 
   1.  Carrega a rota e as coordenadas.
   2.  Cria um plot `matplotlib` com um mapa base (usando `contextily`).
   3.  Define uma função `make_frame(t)` que desenha a rota progressivamente até o tempo `t`.
-  4.  Usa `moviepy.VideoClip` para chamar essa função para cada frame e renderizar o resultado em um vídeo.
+  4.  Usa `moviepy/VideoClip` para chamar essa função para cada frame e renderizar o resultado em um vídeo.
 - **Saída:** `resultados_finais/animacao_cpp.mp4` (Um vídeo da rota sendo percorrida).
+
+## 5. Rotas para k agentes (partição + CPP)
+
+Executa a partição do grafo em k grupos e resolve o CPP separadamente para cada grupo.
+
+### 5.1. Executar k agentes
+
+Pré-requisitos:
+
+- dados_processados/vertices_reordenados.csv
+- dados_processados/arestas_calc.csv
+- dados_processados/adjacency.txt
+
+```bash
+# k = 2 agentes (ajuste conforme necessário)
+python k_agentes.py 2
+```
+
+Saídas:
+
+- `resultados_finais/rotas_k_clusters/k=<k>/cluster_<i>/tour_cost.txt` — custo total do agente `i`
+  - `detalhes/comp_<j>/relatorio_tour/` — artefatos do CPP por componente
+- `resultados_finais/rotas_k_clusters/k=<k>/summary_k.txt` — soma geral
+
+### 5.2. Visualizar rotas k no mapa
+
+Gera um HTML com as rotas de todos os agentes coloridas (Folium).
+
+```bash
+# k deve ser o mesmo usado no passo anterior
+python codigo_fonte/visualizacao/visualizar_mapa_k.py 2
+```
+
+Saída:
+
+- `resultados_finais/mapa_k=<k>.html` — abrir no navegador
