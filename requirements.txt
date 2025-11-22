@@ -1,0 +1,6 @@
+networkx
+matplotlib
+numpy
+osmnx
+shapely
+scikit-learn
