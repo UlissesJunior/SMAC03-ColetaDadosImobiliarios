@@ -72,4 +72,4 @@ os.makedirs(OUT_DIR, exist_ok=True)
 df_mat = pd.DataFrame(mat, index=ids, columns=ids)
 df_mat.to_csv(PATH_SAIDA)
 
-print(f"✅ Matriz de adjacência gerada com sucesso: {PATH_SAIDA}")
+print(f"[OK] Matriz de adjacencia gerada com sucesso: {PATH_SAIDA}")
