@@ -12,6 +12,14 @@ Este projeto resolve o problema de planejamento de rotas para agentes de coleta 
 - Calcula métricas de tempo e custos operacionais
 - Organiza resultados em pastas sequenciais
 
+## 📂 Arquivos Importantes
+
+Todos os arquivos requeridos estão disponíveis abaixo:
+
+- [Link do Vídeo](https://www.youtube.com/watch?v=iOtIAEu7g9g)
+- [Link do Relatório](https://github.com/UlissesJunior/SMAC03-ColetaDadosImobiliarios/blob/main/docs/Relat%C3%B3rio.pdf)
+- [Link dos Slides](https://github.com/UlissesJunior/SMAC03-ColetaDadosImobiliarios/blob/main/docs/Slides.pdf)
+
 ## 🚀 Instalação
 
 ### Pré-requisitos
